@@ -1,31 +1,31 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
 import { useAuthStore } from '@/store/auth'
-import { JobApi } from '@/api/auth'
-import JobTable from '@/components/dashboard/JobTable.vue'
+import { LogApi } from '@/api/auth'
+import LogsTable from '@/components/logs/LogsTable.vue'
 import RefreshControl from '@/components/common/RefreshControl.vue'
 
 const authStore = useAuthStore()
-const jobs = ref<any[]>([])
+const logs = ref<any[]>([])
 const isLoading = ref(true)
 const refreshTime = ref(60)
 const refreshInterval = ref<number | null>(null)
 
-// Fetch jobs on component mount
+// Fetch logs on component mount
 onMounted(async () => {
-  await fetchJobs()
+  await fetchLogs()
   startRefreshInterval()
 })
 
-const fetchJobs = async () => {
+const fetchLogs = async () => {
   isLoading.value = true
   try {
-    const response = await JobApi.getJobs({ page: 1, pageSize: 50 })
+    const response = await LogApi.getLogs({ page: 1, pageSize: 50 })
     if (response.success && response.data) {
-      jobs.value = response.data
+      logs.value = response.data
     }
   } catch (error) {
-    console.error('Error fetching jobs:', error)
+    console.error('Error fetching logs:', error)
   } finally {
     isLoading.value = false
   }
@@ -37,12 +37,12 @@ const startRefreshInterval = () => {
   }
   
   refreshInterval.value = window.setInterval(() => {
-    fetchJobs()
+    fetchLogs()
   }, refreshTime.value * 1000)
 }
 
 const handleRefresh = async () => {
-  await fetchJobs()
+  await fetchLogs()
 }
 
 // Check permissions on mount
@@ -52,8 +52,8 @@ if (!authStore.isAuthenticated) {
 </script>
 
 <template>
-  <div class="dashboard-container">
-    <h1>Job Dashboard</h1>
+  <div class="logs-container">
+    <h1>System Logs</h1>
     
     <RefreshControl 
       :refresh-time="refreshTime"
@@ -61,8 +61,8 @@ if (!authStore.isAuthenticated) {
       @refresh="handleRefresh"
     />
     
-    <JobTable 
-      :jobs="jobs"
+    <LogsTable 
+      :logs="logs"
       :is-loading="isLoading"
       @refresh="handleRefresh"
     />
@@ -70,7 +70,7 @@ if (!authStore.isAuthenticated) {
 </template>
 
 <style scoped>
-.dashboard-container {
+.logs-container {
   max-width: 1400px;
   margin: 0 auto;
 }

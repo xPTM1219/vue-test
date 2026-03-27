@@ -1,23 +1,65 @@
 import { createRouter, createWebHistory } from 'vue-router'
-import HomeView from '../views/HomeView.vue'
+import { useAuthStore } from '@/store/auth'
+
+const routes = [
+  {
+    path: '/',
+    name: 'Home',
+    component: () => import('@/views/HomeView.vue')
+  },
+  {
+    path: '/jobs',
+    name: 'Jobs',
+    component: () => import('@/views/HomeView.vue')
+  },
+  {
+    path: '/logs',
+    name: 'Logs',
+    component: () => import('@/views/LogsView.vue')
+  },
+  {
+    path: '/summary',
+    name: 'Summary',
+    component: () => import('@/views/SummaryView.vue')
+  },
+  {
+    path: '/system',
+    name: 'SystemStatus',
+    component: () => import('@/views/SystemStatusView.vue')
+  },
+  {
+    path: '/login',
+    name: 'Login',
+    component: () => import('@/views/LoginView.vue')
+  },
+  {
+    path: '/unauthorized',
+    name: 'Unauthorized',
+    component: () => import('@/views/UnauthorizedView.vue')
+  }
+]
 
 const router = createRouter({
-  history: createWebHistory(import.meta.env.BASE_URL),
-  routes: [
-    {
-      path: '/',
-      name: 'home',
-      component: HomeView,
-    },
-    {
-      path: '/about',
-      name: 'about',
-      // route level code-splitting
-      // this generates a separate chunk (About.[hash].js) for this route
-      // which is lazy-loaded when the route is visited.
-      component: () => import('../views/AboutView.vue'),
-    },
-  ],
+  history: createWebHistory(),
+  routes
+})
+
+// Navigation guard for authentication
+router.beforeEach(async (to, from, next) => {
+  const authStore = useAuthStore()
+  
+  // If user is not authenticated and trying to access protected routes
+  if (!authStore.isAuthenticated && to.name !== 'Login' && to.name !== 'Unauthorized') {
+    await authStore.checkPermissions()
+    
+    if (authStore.isAuthenticated) {
+      next()
+    } else {
+      next({ name: 'Login' })
+    }
+  } else {
+    next()
+  }
 })
 
 export default router
